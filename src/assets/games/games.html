@@ -3,111 +3,247 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Game Viewer</title>
-
+<title>GamingLab - ゲーム一覧</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 <style>
 *{
     margin:0;
     padding:0;
     box-sizing:border-box;
+    font-family:'Poppins',sans-serif;
 }
 
 body{
-    display:flex;
-    height:100vh;
-    overflow:hidden;
-    font-family:sans-serif;
-}
-
-.sidebar{
-    width:250px;
-    background:#111;
+    background:#0f172a;
     color:white;
-    overflow-y:auto;
+    -webkit-font-smoothing: antialiased;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
-.logo{
-    padding:20px;
-    font-size:22px;
-    font-weight:bold;
-    border-bottom:1px solid #333;
+/* ヘッダー (デザイン継承) */
+header{
+    display:flex;
+    justify-content:flex-start;
+    align-items:center;
+    padding:20px 8%;
+    background:rgba(15,23,42,.75);
+    backdrop-filter:blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    position:sticky;
+    top:0;
+    z-index:100;
 }
 
-.game{
-    padding:15px 20px;
-    cursor:pointer;
-    border-bottom:1px solid #222;
+nav{
+    display:flex;
+    align-items:center;
 }
 
-.game:hover{
-    background:#222;
+nav a{
+    color:#cbd5e1;
+    text-decoration:none;
+    margin-right:30px;
+    font-size: 0.95rem;
+    font-weight: 500;
+    position: relative;
+    padding: 4px 0;
+    transition:.3s;
 }
 
-.viewer{
-    flex:1;
+nav a::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: #38bdf8;
+    transition: width .3s;
 }
 
-iframe{
-    width:100%;
-    height:100%;
-    border:none;
+nav a:hover{
+    color:#38bdf8;
+}
+
+nav a:hover::after {
+    width: 100%;
+}
+
+/* メインコンテンツエリア */
+.container {
+    flex: 1;
+    padding: 40px 8%;
+    max-width: 1400px;
+    margin: 0 auto;
+    width: 100%;
+}
+
+.section-title {
+    font-size: 2rem;
+    font-weight: 700;
+    margin-bottom: 30px;
+    background: linear-gradient(to right, #ffffff, #94a3b8);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    letter-spacing: -0.02em;
+}
+
+/* ゲームグリッドUI */
+.game-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 25px;
+}
+
+/* ゲームカードの強化UI */
+.game-card {
+    background: rgba(30, 41, 59, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    border-radius: 16px;
+    padding: 25px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    min-height: 150px;
+}
+
+/* ゲームのアイコン風ダミー要素 (ビジュアル強化用) */
+.game-icon {
+    width: 50px;
+    height: 50px;
+    margin-bottom: 15px;
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    font-size: 1.2rem;
+    box-shadow: 0 4px 15px rgba(56, 189, 248, 0.2);
+}
+
+.game-name {
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #e2e8f0;
+    transition: color 0.3s;
+}
+
+/* カードホバーエフェクト */
+.game-card:hover {
+    transform: translateY(-5px);
+    border-color: rgba(56, 189, 248, 0.4);
+    box-shadow: 0 10px 30px rgba(56, 189, 248, 0.15);
+    background: rgba(30, 41, 59, 0.8);
+}
+
+.game-card:hover .game-name {
+    color: #38bdf8;
+}
+
+/* フッター (デザイン継承) */
+footer{
+    text-align:center;
+    padding:30px;
+    background:#020617;
+    color:#94a3b8;
+    border-top: 1px solid rgba(255,255,255,0.02);
+    margin-top: auto;
+}
+
+@media(max-width:768px){
+    header{
+        justify-content: center;
+        padding: 15px 0;
+    }
+
+    nav{
+        justify-content:center;
+        flex-wrap:wrap;
+    }
+
+    nav a{
+        margin:8px 12px;
+        font-size: 0.9rem;
+    }
+
+    .container {
+        padding: 20px 5%;
+    }
 }
 </style>
 </head>
 <body>
 
-<div class="sidebar">
+<header>
+    <nav>
+        <a href="/">ホーム</a>
+        <a href="#" style="color:#38bdf8;">ゲーム</a>
+        <a href="#">アカウント</a>
+        <a href="#">コミュニティ</a>
+    </nav>
+</header>
 
-    <div class="logo">Games</div>
+<div class="container">
+    <h2 class="section-title">All Games</h2>
+    
+    <div class="game-grid">
+        <div class="game-card" onclick="playGame('/src/assets/games/2048/2048.html')">
+            <div class="game-icon">20</div>
+            <div class="game-name">2048</div>
+        </div>
 
-    <div class="game" onclick="openGame('/src/assets/games/2048/2048.html')">
-        2048
+        <div class="game-card" onclick="playGame('/src/assets/games/Geometry/GeometryDash.html')">
+            <div class="game-icon">GD</div>
+            <div class="game-name">Geometry Dash</div>
+        </div>
+
+        <div class="game-card" onclick="playGame('/src/assets/games/block/block.html')">
+            <div class="game-icon">BL</div>
+            <div class="game-name">Block</div>
+        </div>
+
+        <div class="game-card" onclick="playGame('/src/assets/games/paperio/paperio.html')">
+            <div class="game-icon">PA</div>
+            <div class="game-name">Paper.io</div>
+        </div>
+
+        <div class="game-card" onclick="playGame('/src/assets/games/snowball/snow.html')">
+            <div class="game-icon">SB</div>
+            <div class="game-name">Snowball</div>
+        </div>
+
+        <div class="game-card" onclick="playGame('/src/assets/games/snowrider/snowrider.html')">
+            <div class="game-icon">SR</div>
+            <div class="game-name">Snow Rider</div>
+        </div>
+
+        <div class="game-card" onclick="playGame('/src/assets/games/sticman/sticman.html')">
+            <div class="game-icon">SM</div>
+            <div class="game-name">Stickman</div>
+        </div>
+
+        <div class="game-card" onclick="playGame('/src/assets/games/tumutumu/tumu.html')">
+            <div class="game-icon">TT</div>
+            <div class="game-name">TumuTumu</div>
+        </div>
     </div>
-
-    <div class="game" onclick="openGame('/src/assets/games/Geometry/GeometryDash.html')">
-        Geometry Dash
-    </div>
-
-    <div class="game" onclick="openGame('/src/assets/games/block/block.html')">
-        Block
-    </div>
-
-    <div class="game" onclick="openGame('/src/assets/games/paperio/paperio.html')">
-        Paper.io
-    </div>
-
-    <div class="game" onclick="openGame('/src/assets/games/snowball/snow.html')">
-        Snowball
-    </div>
-
-    <div class="game" onclick="openGame('/src/assets/games/snowrider/snowrider.html')">
-        Snow Rider
-    </div>
-
-    <div class="game" onclick="openGame('/src/assets/games/sticman/sticman.html')">
-        Stickman
-    </div>
-
-    <div class="game" onclick="openGame('/src/assets/games/tumutumu/tumu.html')">
-        TumuTumu
-    </div>
-
-    <div class="game" onclick="openGame('src/assets/games/tabletannis/index.html')">
-        卓球
-    </div>
-
 </div>
 
-<div class="viewer">
-    <iframe
-        id="gameFrame"
-        src="/src/assets/games/2048/2048.html">
-    </iframe>
-</div>
+<footer>
+    ( ＾ω＾ )
+</footer>
 
 <script>
-function openGame(path){
-    document.getElementById("gameFrame").src = path;
+function playGame(gamePath) {
+    // viewer.html にゲームのパスをパラメータとして渡して遷移
+    window.location.href = `/src/assets/games/viwer.html?game=${encodeURIComponent(gamePath)}`;
 }
 </script>
 
