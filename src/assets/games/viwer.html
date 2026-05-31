@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>GamingLab - Player</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet">
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:'Poppins', sans-serif;
+}
+
+body{
+    background:#0f172a;
+    color:white;
+    -webkit-font-smoothing: antialiased;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    position: relative;
+}
+
+/* ヘッダー (GamingLab Playerの文字を削除、非表示アニメーション対応) */
+header{
+    display:flex;
+    justify-content: space-between;
+    align-items:center;
+    padding:12px 4%;
+    background:rgba(15,23,42,.85);
+    backdrop-filter:blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    z-index:100;
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+    transform: translateY(0);
+    opacity: 1;
+}
+
+/* ヘッダーが非表示状態のクラス */
+header.hidden {
+    transform: translateY(-100%);
+    opacity: 0;
+    pointer-events: none;
+    position: absolute;
+    width: 100%;
+}
+
+/* 左側の操作エリア（戻る＆ヘッダー格納） */
+.left-controls {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+/* ボタン共通のモダンUI */
+.btn-modern {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    color: #cbd5e1;
+    border-radius: 20px;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+.btn-modern:hover {
+    background: linear-gradient(135deg, #38bdf8 0%, #0ea5e9 100%);
+    color: white;
+    border-color: #38bdf8;
+    box-shadow: 0 0 15px rgba(56, 189, 248, 0.35);
+    transform: translateY(-1px);
+}
+
+.btn-modern .material-symbols-outlined {
+    font-size: 1.1rem;
+}
+
+/* ヘッダーが隠れている時に画面最上部に現れる「復活ボタン」 */
+#headerRevealBtn {
+    position: absolute;
+    top: 10px;
+    left: 4%;
+    z-index: 101;
+    opacity: 0;
+    transform: translateY(-20px);
+    pointer-events: none;
+    transition: all 0.3s;
+}
+
+#headerRevealBtn.show {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* ゲーム画面エリア */
+.viewer-container {
+    flex: 1;
+    width: 100%;
+    background: #000;
+    position: relative;
+    transition: margin-top 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.viewer-container.fullscreen-layout {
+    margin-top: 0;
+}
+
+iframe {
+    width: 100%;
+    height: 100%;
+    border: none;
+}
+
+/* エラー表示 */
+.error-msg {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    color: #f43f5e;
+    font-size: 1.2rem;
+    text-align: center;
+    display: none;
+    z-index: 10;
+}
+
+/* ==========================================================================
+   超かっこいい右側ツールサイドバー (サイバーパンク/ネオンエフェクト)
+   ========================================================================== */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(2, 6, 23, 0.4);
+    backdrop-filter: blur(4px);
+    z-index: 199;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+}
+
+.sidebar-overlay.active {
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.tool-sidebar {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 320px;
+    height: 100%;
+    background: rgba(15, 23, 42, 0.92);
+    backdrop-filter: blur(20px);
+    border-left: 1px solid rgba(56, 189, 248, 0.2);
+    box-shadow: -10px 0 40px rgba(0, 0, 0, 0.5), inset 1px 0 0 rgba(255, 255, 255, 0.05);
+    z-index: 200;
+    transform: translateX(100%);
+    transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    padding: 30px 24px;
+    display: flex;
+    flex-direction: column;
+}
+
+.tool-sidebar.active {
+    transform: translateX(0);
+    box-shadow: -5px 0 30px rgba(56, 189, 248, 0.15);
+}
+
+/* サイドバーヘッダー */
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding-bottom: 15px;
+}
+
+.sidebar-title {
+    font-size: 1.2rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    background: linear-gradient(to right, #38bdf8, #a78bfa);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.close-sidebar-btn {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    transition: color 0.3s, transform 0.2s;
+    display: flex;
+    align-items: center;
+}
+
+.close-sidebar-btn:hover {
+    color: #f43f5e;
+    transform: scale(1.1);
+}
+
+/* ツールアイテムのグリッド/リストレイアウト */
+.tools-list {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    overflow-y: auto;
+    flex: 1;
+    padding-right: 4px;
+}
+
+/* カスタムスクロールバー */
+.tools-list::-webkit-scrollbar {
+    width: 6px;
+}
+.tools-list::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 3px;
+}
+
+/* 各ツールカードの近未来デザイン */
+.tool-item {
+    background: rgba(30, 41, 59, 0.4);
+    border: 1px solid rgba(255, 255, 255, 0.03);
+    border-radius: 14px;
+    padding: 14px 18px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.tool-item::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 3px;
+    height: 100%;
+    background: transparent;
+    transition: background 0.3s;
+}
+
+.tool-item:hover {
+    background: rgba(30, 41, 59, 0.8);
+    border-color: rgba(56, 189, 248, 0.25);
+    transform: translateX(-4px);
+}
+
+.tool-item:hover::before {
+    background: #38bdf8;
+}
+
+/* マテリアルアイコンのサークル背景 */
+.tool-icon-wrapper {
+    width: 42px;
+    height: 42px;
+    background: rgba(56, 189, 248, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #38bdf8;
+    transition: all 0.3s;
+}
+
+.tool-item:hover .tool-icon-wrapper {
+    background: #38bdf8;
+    color: white;
+    box-shadow: 0 0 12px rgba(56, 189, 248, 0.4);
+}
+
+.tool-info {
+    flex: 1;
+}
+
+.tool-name {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: #e2e8f0;
+}
+
+.tool-desc {
+    font-size: 0.75rem;
+    color: #64748b;
+    margin-top: 2px;
+}
+
+/* インライン拡張機能（メモ帳やタイマー表示用） */
+.tool-expand-box {
+    width: 100%;
+    margin-top: 8px;
+    display: none;
+    background: rgba(15, 23, 42, 0.6);
+    border-radius: 8px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.tool-expand-box.active {
+    display: block;
+    animation: fadeIn 0.3s ease;
+}
+
+/* 簡易メモ帳スタイル */
+.tool-notepad {
+    width: 100%;
+    height: 80px;
+    background: #0f172a;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: white;
+    padding: 8px;
+    font-size: 0.8rem;
+    resize: none;
+    outline: none;
+}
+.tool-notepad:focus {
+    border-color: #38bdf8;
+}
+
+/* タイマー文字 */
+.timer-display {
+    font-size: 1.1rem;
+    font-weight: bold;
+    color: #38bdf8;
+    text-align: center;
+    font-family: monospace;
+    letter-spacing: 1px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* スワイプを誘導する画面右端の感知エリア */
+.swipe-edge {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 15px;
+    height: 100%;
+    z-index: 190;
+    background: transparent;
+    cursor: w-resize;
+}
+</style>
+</head>
+<body>
+
+<button id="headerRevealBtn" class="btn-modern" onclick="toggleHeader(true)">
+    <span class="material-symbols-outlined">expand_more</span>メニューを表示
+</button>
+
+<header id="mainHeader">
+    <div class="left-controls">
+        <a href="/src/assets/games/games.html" class="btn-modern">
+            <span class="material-symbols-outlined">arrow_back</span>ゲーム一覧
+        </a>
+        <button class="btn-modern" onclick="toggleHeader(false)" title="ゲームに集中するためにヘッダーを隠します">
+            <span class="material-symbols-outlined">visibility_off</span>隠す
+        </button>
+    </div>
+    
+    <button class="btn-modern" onclick="toggleSidebar(true)">
+        <span class="material-symbols-outlined">construction</span>ツールメニュー
+    </button>
+</header>
+
+<div class="viewer-container" id="viewerContainer">
+    <div id="error" class="error-msg">ゲームの読み込みに失敗しました。</div>
+    <iframe id="gameFrame" src=""></iframe>
+</div>
+
+<div class="swipe-edge" id="swipeEdge"></div>
+
+<div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar(false)"></div>
+
+<div class="tool-sidebar" id="toolSidebar">
+    <div class="sidebar-header">
+        <div class="sidebar-title">
+            <span class="material-symbols-outlined">settings_cyber_cyberpunk</span>SYSTEM TOOLS
+        </div>
+        <button class="close-sidebar-btn" onclick="toggleSidebar(false)">
+            <span class="material-symbols-outlined">close</span>
+        </button>
+    </div>
+
+    <div class="tools-list">
+        <div class="tool-item" onclick="executeTool('reload')">
+            <div class="tool-icon-wrapper">
+                <span class="material-symbols-outlined">refresh</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-name">Game Reset</div>
+                <div class="tool-desc">ゲームを最初からやり直します</div>
+            </div>
+        </div>
+
+        <div class="tool-item" onclick="executeTool('fullscreen')">
+            <div class="tool-icon-wrapper">
+                <span class="material-symbols-outlined">fullscreen</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-name">Full Screen</div>
+                <div class="tool-desc">大画面モードのオン/オフ切り替え</div>
+            </div>
+        </div>
+
+        <div>
+            <div class="tool-item" onclick="executeTool('toggle-memo')">
+                <div class="tool-icon-wrapper">
+                    <span class="material-symbols-outlined">edit_note</span>
+                </div>
+                <div class="tool-info">
+                    <div class="tool-name">Quick Notepad</div>
+                    <div class="tool-desc">攻略用のメモを一時保存できます</div>
+                </div>
+            </div>
+            <div class="tool-expand-box" id="box-memo">
+                <textarea class="tool-notepad" id="toolMemo" placeholder="ここにメモを入力... (自動保存されます)"></textarea>
+            </div>
+        </div>
+
+        <div>
+            <div class="tool-item" onclick="executeTool('toggle-timer')">
+                <div class="tool-icon-wrapper">
+                    <span class="material-symbols-outlined">timer</span>
+                </div>
+                <div class="tool-info">
+                    <div class="tool-name">Play Timer</div>
+                    <div class="tool-desc">ゲームのプレイ時間を計測します</div>
+                </div>
+            </div>
+            <div class="tool-expand-box" id="box-timer">
+                <div class="timer-display" id="timerDisplay">00:00:00</div>
+            </div>
+        </div>
+
+        <div class="tool-item" onclick="executeTool('mute')">
+            <div class="tool-icon-wrapper">
+                <span class="material-symbols-outlined" id="muteIcon">volume_up</span>
+            </div>
+            <div class="tool-info">
+                <div class="tool-name">Audio Controller</div>
+                <div class="tool-desc">全体の音声をミュート/解除</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// URLのパラメータからゲームのパスを抽出してiframeにセットする
+function loadGame() {
+    const params = new URLSearchParams(window.location.search);
+    const gamePath = params.get('game');
+    
+    if (gamePath) {
+        document.getElementById('gameFrame').src = gamePath;
+    } else {
+        document.getElementById('error').style.display = 'block';
+    }
+}
+
+// ヘッダーの表示・非表示切り替えロジック
+function toggleHeader(visible) {
+    const header = document.getElementById('mainHeader');
+    const revealBtn = document.getElementById('headerRevealBtn');
+    const container = document.getElementById('viewerContainer');
+    
+    if (visible) {
+        header.classList.remove('hidden');
+        revealBtn.classList.remove('show');
+        container.classList.remove('fullscreen-layout');
+    } else {
+        header.classList.add('hidden');
+        revealBtn.classList.add('show');
+        container.classList.add('fullscreen-layout');
+    }
+}
+
+// サイドバーの表示・非表示切り替えロジック
+function toggleSidebar(open) {
+    const sidebar = document.getElementById('toolSidebar');
+    const overlay = document.getElementById('sidebarOverlay');
+    
+    if (open) {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    } else {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    }
+}
+
+// ==========================================================================
+// スワイプジェスチャーの実装 (右端から左へスワイプでツールを開く)
+// ==========================================================================
+let touchStartX = 0;
+let touchStartY = 0;
+
+// 画面右端の感知エリアと、全体でのスワイプの両方をサポート
+const edgeDetector = document.getElementById('swipeEdge');
+
+window.addEventListener('touchstart', (e) => {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+}, { passive: true });
+
+window.addEventListener('touchend', (e) => {
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    const diffX = touchStartX - touchEndX;
+    const diffY = Math.abs(touchStartY - touchEndY);
+    
+    // 条件：右から左へのスワイプ（50px以上移動）かつ、縦揺れが少ないこと
+    // かつ、開始地点が画面の右側半分以降であること
+    if (diffX > 50 && diffY < 40 && touchStartX > (window.innerWidth * 0.5)) {
+        toggleSidebar(true);
+    }
+}, { passive: true });
+
+
+// ==========================================================================
+// 各種システムツールの実動作ロジック
+// ==========================================================================
+let playTimerInterval = null;
+let secondsPlayed = 0;
+let isMuted = false;
+
+function executeTool(action) {
+    const iframe = document.getElementById('gameFrame');
+    
+    switch (action) {
+        case 'reload':
+            // ゲーム用iframeをリロード
+            if(iframe.src) {
+                iframe.contentWindow.location.reload();
+            }
+            toggleSidebar(false);
+            break;
+            
+        case 'fullscreen':
+            // ブラウザ標準の全画面モードトグル
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(err => {
+                    alert(`全画面エラー: ${err.message}`);
+                });
+            } else {
+                document.exitFullscreen();
+            }
+            toggleSidebar(false);
+            break;
+            
+        case 'toggle-memo':
+            // メモ領域の開閉トグル
+            document.getElementById('box-memo').classList.toggle('active');
+            break;
+            
+        case 'toggle-timer':
+            // タイマー表示の開閉トグルと計測開始
+            const timerBox = document.getElementById('box-timer');
+            timerBox.classList.toggle('active');
+            
+            if (timerBox.classList.contains('active') && !playTimerInterval) {
+                playTimerInterval = setInterval(() => {
+                    secondsPlayed++;
+                    const hrs = String(Math.floor(secondsPlayed / 3600)).padStart(2, '0');
+                    const mins = String(Math.floor((secondsPlayed % 3600) / 60)).padStart(2, '0');
+                    const secs = String(secondsPlayed % 60).padStart(2, '0');
+                    document.getElementById('timerDisplay').textContent = `${hrs}:${mins}:${secs}`;
+                }, 1000);
+            }
+            break;
+            
+        case 'mute':
+            // 音声コントロールトグル（※同一ドメイン、またはCORS許可ゲームに有効）
+            const muteIcon = document.getElementById('muteIcon');
+            isMuted = !isMuted;
+            try {
+                if (iframe.contentWindow) {
+                    // HTML5のすべてのvideo/audio要素を対象にミュート設定
+                    const audios = iframe.contentWindow.document.querySelectorAll('video, audio');
+                    audios.forEach(track => track.muted = isMuted);
+                }
+            } catch(e) {
+                console.log("クロスドメイン保護によりiframe内部の直接ミュートは制限されています。");
+            }
+            
+            if (isMuted) {
+                muteIcon.textContent = 'volume_off';
+                muteIcon.style.color = '#f43f5e';
+            } else {
+                muteIcon.textContent = 'volume_up';
+                muteIcon.style.color = '#38bdf8';
+            }
+            break;
+    }
+}
+
+// メモ帳のローカルストレージ自動保存機能
+document.getElementById('toolMemo').addEventListener('input', (e) => {
+    localStorage.setItem('gaminglab_quick_memo', e.target.value);
+});
+
+// ページ初期化処理
+window.onload = () => {
+    loadGame();
+    
+    // 保存されたメモがあれば復元
+    const savedMemo = localStorage.getItem('gaminglab_quick_memo');
+    if (savedMemo) {
+        document.getElementById('toolMemo').value = savedMemo;
+    }
+};
+</script>
+
+</body>
+</html>
